@@ -1,0 +1,7 @@
+{
+  "name": "RestoFinance AI - Multi-Outlet Financial Analyst",
+  "description": "An AI-powered financial analyst for restaurant businesses across India, Singapore, and Australia. Converts messy POS reports, delivery statements, and expense bills into structured accounting data, journal entries, and risk alerts.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
