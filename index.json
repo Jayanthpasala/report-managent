@@ -1,0 +1,18 @@
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+
+    "firebase/app": "https://esm.sh/firebase@11.2.0/app",
+    "firebase/database": "https://esm.sh/firebase@11.2.0/database?external=firebase/app",
+    "firebase/storage": "https://esm.sh/firebase@11.2.0/storage?external=firebase/app",
+
+    "recharts": "https://esm.sh/recharts@2.13.0?external=react,react-dom",
+    "@google/genai": "https://esm.sh/@google/genai@1.38.0",
+
+    "xlsx": "https://esm.sh/xlsx@0.18.5",
+    "html2pdf.js": "https://esm.sh/html2pdf.js@0.10.1?bundle",
+    "jszip": "https://esm.sh/jszip@3.10.1"
+  }
+}
+

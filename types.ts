@@ -87,6 +87,7 @@ export interface AnalysisResult {
   redFlags: RedFlag[];
   outletId?: string;
   fileData?: FileData;
+  fileUrl?: string; // Cloud storage link
 }
 
 export interface AnalysisContext {
@@ -119,7 +120,8 @@ export interface VendorBill {
   dueDate?: string;
   outletId: string;
   sourceRecordId?: string;
-  fileData?: FileData; // Added for bulk download
+  fileData?: FileData;
+  fileUrl?: string; // Cloud storage link
 }
 
 export interface SettlementItem {

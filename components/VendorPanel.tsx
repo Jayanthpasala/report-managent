@@ -60,7 +60,11 @@ const VendorPanel: React.FC<VendorPanelProps> = ({ vendors = [], bills = [], out
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">{selectedVendor.category}</span>
                   <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Spent: {formatCurrency(getVendorTotalSpend(selectedVendor.name), 'INR')}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Region: {countries.find(c => c.code === selectedVendor.country)?.flag} {selectedVendor.country}
+                  </span>
+                  <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cloud Total: {formatCurrency(getVendorTotalSpend(selectedVendor.name), 'INR')}</span>
                 </div>
               </div>
             </div>
@@ -71,7 +75,7 @@ const VendorPanel: React.FC<VendorPanelProps> = ({ vendors = [], bills = [], out
           </div>
 
           <div className="space-y-6">
-            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Transaction Vault</h4>
+            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Digital Audit Vault</h4>
             <div className="space-y-4">
               {selectedVendorBills.length > 0 ? selectedVendorBills.map(bill => (
                 <div key={bill.id} className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-4">
@@ -82,17 +86,26 @@ const VendorPanel: React.FC<VendorPanelProps> = ({ vendors = [], bills = [], out
                     </div>
                     <div>
                       <p className="text-base font-black text-slate-900">{formatCurrency(bill.amount, bill.currency)}</p>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Ref: {bill.id.substr(0,8)}</p>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Cloud ID: {bill.id}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {bill.fileData && (
+                    {bill.fileUrl ? (
+                      <a 
+                        href={bill.fileUrl} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-5 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:border-blue-500 transition-all shadow-sm"
+                      >
+                        Download PDF
+                      </a>
+                    ) : bill.fileData && (
                       <a 
                         href={`data:${bill.fileData.mimeType};base64,${bill.fileData.data}`} 
                         download={bill.fileData.fileName}
                         className="px-5 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-black text-[10px] uppercase tracking-widest hover:border-blue-500 transition-all shadow-sm"
                       >
-                        Download PDF
+                        Download Local
                       </a>
                     )}
                     <span className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg ${bill.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{bill.status}</span>
@@ -101,7 +114,7 @@ const VendorPanel: React.FC<VendorPanelProps> = ({ vendors = [], bills = [], out
                     )}
                   </div>
                 </div>
-              )) : <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-3xl text-slate-300 italic text-sm font-bold">No history for this vendor yet.</div>}
+              )) : <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-3xl text-slate-300 italic text-sm font-bold">No history in the cloud.</div>}
             </div>
           </div>
         </div>
@@ -116,12 +129,12 @@ const VendorPanel: React.FC<VendorPanelProps> = ({ vendors = [], bills = [], out
         <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full -mr-40 -mt-40 blur-3xl"></div>
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
           <div>
-            <h2 className="text-4xl font-black italic tracking-tighter">Vendor Books.</h2>
-            <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest mt-2">{vendors.length} Registered Partners</p>
+            <h2 className="text-4xl font-black italic tracking-tighter">Vendor Cloud.</h2>
+            <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest mt-2">{vendors.length} Verified Partners</p>
           </div>
           <div className="flex w-full md:w-auto gap-4">
-            <input type="text" placeholder="Search partners..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="flex-1 md:w-64 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-xs font-bold text-white outline-none focus:bg-white/10" />
-            <button onClick={() => setShowAddVendor(true)} className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95">Add Profile</button>
+            <input type="text" placeholder="Search cloud..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="flex-1 md:w-64 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-xs font-bold text-white outline-none focus:bg-white/10" />
+            <button onClick={() => setShowAddVendor(true)} className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95">New Profile</button>
           </div>
         </div>
       </div>
@@ -133,7 +146,11 @@ const VendorPanel: React.FC<VendorPanelProps> = ({ vendors = [], bills = [], out
               <div className="w-14 h-14 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center font-black group-hover:bg-blue-600 group-hover:text-white transition-all">{vendor.name.charAt(0)}</div>
               <div>
                 <h4 className="font-black text-slate-900 text-lg leading-tight">{vendor.name}</h4>
-                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">{vendor.category}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">{vendor.category}</p>
+                  <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{countries.find(c => c.code === vendor.country)?.flag} {vendor.country}</p>
+                </div>
               </div>
             </div>
             <div className="text-right">
@@ -147,22 +164,56 @@ const VendorPanel: React.FC<VendorPanelProps> = ({ vendors = [], bills = [], out
       {showAddVendor && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-lg rounded-[3rem] p-12 animate-slide-up space-y-8">
-            <h3 className="text-2xl font-black text-slate-900 italic tracking-tight">Register New Vendor</h3>
-            <div className="space-y-4">
-              <input id="new-v-name" type="text" placeholder="Legal Name..." className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none" />
-              <select id="new-v-cat" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm appearance-none outline-none">
-                <option value="Raw Food">Raw Food / Inventory</option>
-                <option value="Labor">Labor / Salaries</option>
-                <option value="Rent">Rent / Occupancy</option>
-                <option value="Utilities">Utilities</option>
-                <option value="Marketing">Marketing</option>
-              </select>
-              <button onClick={() => {
-                const n = (document.getElementById('new-v-name') as HTMLInputElement).value;
-                const c = (document.getElementById('new-v-cat') as HTMLSelectElement).value;
-                if(n) { onAddVendor({ name: n, category: c, country: 'IN' }); setShowAddVendor(false); }
-              }} className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95">Establish Profile</button>
-              <button onClick={() => setShowAddVendor(false)} className="w-full py-3 text-slate-400 font-black text-[10px] uppercase tracking-widest">Cancel</button>
+            <div className="border-b border-slate-100 pb-6">
+              <h3 className="text-2xl font-black text-slate-900 italic tracking-tight leading-none">Cloud Registration</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Add New Vendor Identity</p>
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Legal Name</label>
+                <input id="new-v-name" type="text" placeholder="Vendor Label..." className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:border-blue-500 focus:bg-white transition-all" />
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Expenditure Type</label>
+                  <select id="new-v-cat" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm appearance-none outline-none focus:border-blue-500 focus:bg-white transition-all">
+                    <option value="Raw Food">Raw Food / Inventory</option>
+                    <option value="Labor">Labor / Salaries</option>
+                    <option value="Rent">Rent / Occupancy</option>
+                    <option value="Utilities">Utilities</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Capex">Capex / Equipment</option>
+                    <option value="General">Other / General</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Operational Region</label>
+                  <select id="new-v-country" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm appearance-none outline-none focus:border-blue-500 focus:bg-white transition-all">
+                    {countries.map(c => (
+                      <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-6 space-y-3">
+                <button onClick={() => {
+                  const n = (document.getElementById('new-v-name') as HTMLInputElement).value;
+                  const c = (document.getElementById('new-v-cat') as HTMLSelectElement).value;
+                  const r = (document.getElementById('new-v-country') as HTMLSelectElement).value;
+                  if(n && r) { 
+                    onAddVendor({ name: n, category: c, country: r }); 
+                    setShowAddVendor(false); 
+                  }
+                }} className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 hover:bg-blue-700 transition-all">
+                  Sync Vendor to Portfolio
+                </button>
+                <button onClick={() => setShowAddVendor(false)} className="w-full py-3 text-slate-400 font-black text-[10px] uppercase tracking-widest hover:text-slate-600 transition-colors">
+                  Discard Entry
+                </button>
+              </div>
             </div>
           </div>
         </div>

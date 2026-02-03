@@ -23,8 +23,12 @@ const getSafeApiKey = (): string => {
 };
 
 export const getLatestExchangeRates = async (currencies: string[]): Promise<RateUpdateResponse> => {
+  // Hardcoded fallback rates as a last resort (INR equivalents)
+  const defaultRates: ExchangeRates = { 'SGD': 63.80, 'AUD': 55.40, 'INR': 1, 'USD': 83.90, 'AED': 22.80, 'GBP': 106.10, 'EUR': 91.20 };
+  
   try {
     const response = await fetch(`https://v6.exchangerate-api.com/v6/${FX_API_KEY}/latest/INR`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
 
     if (data.result === "success") {
@@ -32,36 +36,56 @@ export const getLatestExchangeRates = async (currencies: string[]): Promise<Rate
       const processedRates: ExchangeRates = { 'INR': 1 };
       
       currencies.forEach(curr => {
-        if (curr === 'INR') return;
+        if (curr === 'INR' || !curr) return;
         if (conversionRates[curr]) {
+          // conversionRates[curr] is unit of [curr] per 1 INR.
+          // We need value of 1 [curr] in INR = (1 / rate).
           processedRates[curr] = 1 / conversionRates[curr];
+        } else {
+          processedRates[curr] = defaultRates[curr] || 1;
         }
       });
 
       return { 
-        rates: processedRates, 
+        rates: { ...defaultRates, ...processedRates }, 
         sources: [{ title: "ExchangeRate-API", uri: "https://www.exchangerate-api.com" }], 
         isLive: true 
       };
     }
-    throw new Error("FX API returned failure");
+    throw new Error("FX API success field missing");
   } catch (error: any) {
-    console.warn("Live FX API failed fallback to Gemini search:", error.message);
+    console.warn("Primary FX API failed, falling back to Gemini AI:", error.message);
     const apiKey = getSafeApiKey();
-    if (!apiKey) return { rates: { 'SGD': 63.45, 'AUD': 55.20, 'INR': 1 }, sources: [], isLive: false };
-    const ai = new GoogleGenAI({ apiKey });
+    if (!apiKey) return { rates: defaultRates, sources: [], isLive: false };
+
     try {
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Find current exchange rates for ${currencies.join(', ')} against INR. Format as JSON: {"CURRENCY": rate_in_inr}.`,
-        config: { tools: [{ googleSearch: {} }] },
+        contents: `Provide current exchange rates for: ${currencies.join(', ')}. 
+        I need the value of exactly 1 unit of each currency converted into Indian Rupees (INR). 
+        Format: If 1 SGD = 64.2 INR, the value for SGD is 64.2.
+        IMPORTANT: Return ONLY a plain JSON object with currency codes as keys and numbers as values. 
+        Example: {"SGD": 64.2, "USD": 83.9, "AUD": 55.4}.`,
+        config: { 
+          tools: [{ googleSearch: {} }],
+          responseMimeType: "application/json"
+        },
       });
-      const text = response.text || "{}";
-      const rates = JSON.parse(text.match(/\{.*\}/s)?.[0] || "{}");
-      rates['INR'] = 1;
-      return { rates, sources: [], isLive: true };
+      
+      const text = response.text.trim();
+      const parsed = JSON.parse(text);
+      const rates: ExchangeRates = { 'INR': 1 };
+      
+      Object.keys(parsed).forEach(k => {
+        const val = Number(parsed[k]);
+        if (!isNaN(val) && val > 0) rates[k] = val;
+      });
+
+      return { rates: { ...defaultRates, ...rates }, sources: [], isLive: true };
     } catch (e) {
-      return { rates: { 'SGD': 63.45, 'AUD': 55.20, 'INR': 1 }, sources: [], isLive: false };
+      console.error("Gemini FX fallback failed:", e);
+      return { rates: defaultRates, sources: [], isLive: false };
     }
   }
 };
@@ -84,11 +108,11 @@ export const analyzeDocument = async (
     Target Vendor: ${vendorHint || 'None - Sales Audit'}
     
     CRITICAL ACCOUNTING RULES:
-    1. RECTIFICATION: If the input document contains both sales data (revenue) and invoices (expenses) on different pages, RECTIFY and prioritize the classification based on the main workflow.
-    2. CLASSIFICATION: If input is a Sales/POS Report, classify as "REVENUE". If input is a Vendor Bill/Invoice, classify as "EXPENSE".
-    3. REVENUE LEDGER: Map to "Sales Account" (Credit) and "Cash/Bank Account" (Debit).
-    4. EXPENSE LEDGER: Map to "Utilities/COGS/Rent" (Debit) and "Accounts Payable" (Credit).
-    5. DATA INTEGRITY: Compare Payment Totals against Itemized SKU totals. If they differ, flag as HIGH criticality.
+    1. RECTIFICATION: If the input document contains both sales data (revenue) and invoices (expenses) on different pages, prioritize based on the primary document content.
+    2. CLASSIFICATION: Sales/POS Report = "REVENUE". Vendor Bill/Invoice = "EXPENSE".
+    3. LEDGER: REVENUE maps to "Sales Account" (Cr) and "Cash/Bank" (Dr). EXPENSE maps to relevant COGS/Opex (Dr) and "Accounts Payable" (Cr).
+    4. DATA INTEGRITY: Compare totals against line items. Flag any variances as HIGH severity.
+    5. CURRENCY: All amounts in the JSON should be in the ORIGINAL document currency (${context.currency}).
     
     Response format must be valid JSON matching the schema.
   `;
