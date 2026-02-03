@@ -28,6 +28,8 @@ const InfoIcon = ({ tooltip }: { tooltip: string }) => (
 const HQDashboard: React.FC<HQDashboardProps> = ({ records, bills, outlets, countries }) => {
   const [isGeneratingAudit, setIsGeneratingAudit] = useState(false);
   const [globalAudit, setGlobalAudit] = useState<string | null>(null);
+  const hasOutlets = outlets.length > 0;
+  const hasActivity = records.length > 0 || bills.length > 0;
 
   const stats = useMemo(() => {
     const totalRev = records
@@ -117,6 +119,55 @@ const HQDashboard: React.FC<HQDashboardProps> = ({ records, bills, outlets, coun
         <h2 className="text-4xl font-black text-slate-900 tracking-tighter italic">Enterprise Hub.</h2>
         <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.4em] mt-2">Combined Portfolio Analytics</p>
       </header>
+
+      {!hasOutlets && (
+        <section className="bg-white rounded-[3.5rem] border border-slate-100 shadow-xl p-10">
+          <div className="flex flex-col lg:flex-row gap-10 items-start lg:items-center">
+            <div className="flex-1">
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">Welcome to RestoFinance.</h3>
+              <p className="text-slate-500 text-sm font-medium mt-3 leading-relaxed">
+                Start by creating your first branch so the system can track sales, bills, and performance.
+              </p>
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { step: '01', title: 'Add Branch', detail: 'Open “Branches” and save your restaurant or cafe location.' },
+                  { step: '02', title: 'Upload Sales', detail: 'Use “Audit Hub” to reconcile daily summary and SKU reports.' },
+                  { step: '03', title: 'Track Vendors', detail: 'Add vendor bills to see cost ratios and cash flow.' }
+                ].map((item) => (
+                  <div key={item.step} className="bg-slate-50 rounded-2xl border border-slate-100 p-5">
+                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">{item.step}</p>
+                    <p className="text-sm font-black text-slate-900 mt-2">{item.title}</p>
+                    <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 w-full lg:w-72">
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">Quick Tip</p>
+              <p className="text-sm font-medium text-white/80 leading-relaxed">
+                If you manage multiple brands, create one branch per outlet. You can filter by branch from the sidebar.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {hasOutlets && !hasActivity && (
+        <section className="bg-blue-50 border border-blue-100 rounded-[2.5rem] p-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div>
+              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Next Step</p>
+              <h3 className="text-xl font-black text-slate-900 mt-2">Upload your first sales report.</h3>
+              <p className="text-sm text-slate-600 mt-2">
+                Go to “Audit Hub” and upload the Daily Summary + SKU report to generate your first analysis.
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl border border-blue-100 px-6 py-4 text-[11px] font-bold text-slate-600">
+              Tip: PDF, JPG, or PNG files work best.
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white">
